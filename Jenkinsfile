@@ -38,7 +38,7 @@ pipeline {
             }
         }
 
-        stage("Deploy") {
+        stage("Deploy-hu") {
             steps {
                 final_step()
             }
