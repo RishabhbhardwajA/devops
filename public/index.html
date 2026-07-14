@@ -3,58 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Docker Learning App</title>
+    <title>Docker Notes App</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #121212;
             color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             margin: 0;
-            text-align: center;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         .container {
             background-color: #1e1e1e;
-            padding: 3rem;
+            padding: 2rem;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            width: 100%;
             max-width: 600px;
         }
         h1 {
-            color: #0db7ed; /* Docker blue */
-            margin-bottom: 1rem;
+            color: #0db7ed;
+            text-align: center;
+            margin-bottom: 1.5rem;
         }
-        p {
-            font-size: 1.1rem;
-            line-height: 1.6;
-            color: #b3b3b3;
+        .form-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 2rem;
         }
-        .code-block {
-            background-color: #2d2d2d;
-            padding: 1rem;
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
             border-radius: 6px;
-            text-align: left;
-            margin-top: 1.5rem;
-            font-family: monospace;
-            color: #9cdcfe;
+            border: 1px solid #333;
+            background-color: #2d2d2d;
+            color: white;
+            font-size: 1rem;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #0db7ed;
+        }
+        button {
+            background-color: #0db7ed;
+            color: #121212;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #0ba0d0;
+        }
+        .notes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .note-card {
+            background-color: #2d2d2d;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #0db7ed;
+            animation: fadeIn 0.3s ease-in;
+        }
+        .delete-btn {
+            background-color: #ff4757;
+            color: white;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+        }
+        .delete-btn:hover {
+            background-color: #ff6b81;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Welcome to Docker Learning App! 🐳</h1>
-        <p>This is a very simple Node.js web application designed to help you practice Docker concepts like writing <strong>Dockerfile</strong> and <strong>docker-compose.yml</strong>.</p>
-        <div class="code-block">
-            # To build the image:<br>
-            docker build -t my-app .<br><br>
-            # To run it:<br>
-            docker run -p 3000:3000 my-app<br><br>
-            # Or use compose:<br>
-            docker-compose up -d
+        <h1>My Notes App 📝</h1>
+        
+        <form id="noteForm" class="form-group">
+            <input type="text" id="noteInput" placeholder="Write a new note..." required autocomplete="off">
+            <button type="submit">Add Note</button>
+        </form>
+
+        <div id="notesList" class="notes-list">
+            <!-- Notes will be populated here by JavaScript -->
+            <p style="text-align: center; color: #888;">Loading notes...</p>
         </div>
     </div>
+
+    <script>
+        const API_URL = '/api/notes';
+        const notesList = document.getElementById('notesList');
+        const noteForm = document.getElementById('noteForm');
+        const noteInput = document.getElementById('noteInput');
+
+        // Fetch and display notes
+        async function fetchNotes() {
+            try {
+                const response = await fetch(API_URL);
+                const notes = await response.json();
+                renderNotes(notes);
+            } catch (error) {
+                console.error("Error fetching notes:", error);
+                notesList.innerHTML = '<p style="color: #ff4757;">Failed to load notes.</p>';
+            }
+        }
+
+        // Render notes to the DOM
+        function renderNotes(notes) {
+            if (notes.length === 0) {
+                notesList.innerHTML = '<p style="text-align: center; color: #888;">No notes yet. Add one!</p>';
+                return;
+            }
+            
+            notesList.innerHTML = '';
+            notes.forEach(note => {
+                const noteEl = document.createElement('div');
+                noteEl.className = 'note-card';
+                noteEl.innerHTML = `
+                    <span>${escapeHTML(note.text)}</span>
+                    <button class="delete-btn" onclick="deleteNote(${note.id})">Delete</button>
+                `;
+                notesList.appendChild(noteEl);
+            });
+        }
+
+        // Add a new note
+        noteForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = noteInput.value.trim();
+            if (!text) return;
+
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+                noteInput.value = '';
+                fetchNotes(); // Refresh list
+            } catch (error) {
+                console.error("Error adding note:", error);
+            }
+        });
+
+        // Delete a note
+        async function deleteNote(id) {
+            try {
+                await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE'
+                });
+                fetchNotes(); // Refresh list
+            } catch (error) {
+                console.error("Error deleting note:", error);
+            }
+        }
+
+        // Basic HTML escaping to prevent XSS
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                }[tag])
+            );
+        }
+
+        // Initial load
+        fetchNotes();
+    </script>
 </body>
 </html>
