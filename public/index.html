@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker Learning App</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .container {
+            background-color: #1e1e1e;
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            max-width: 600px;
+        }
+        h1 {
+            color: #0db7ed; /* Docker blue */
+            margin-bottom: 1rem;
+        }
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #b3b3b3;
+        }
+        .code-block {
+            background-color: #2d2d2d;
+            padding: 1rem;
+            border-radius: 6px;
+            text-align: left;
+            margin-top: 1.5rem;
+            font-family: monospace;
+            color: #9cdcfe;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Docker Learning App! 🐳</h1>
+        <p>This is a very simple Node.js web application designed to help you practice Docker concepts like writing <strong>Dockerfile</strong> and <strong>docker-compose.yml</strong>.</p>
+        <div class="code-block">
+            # To build the image:<br>
+            docker build -t my-app .<br><br>
+            # To run it:<br>
+            docker run -p 3000:3000 my-app<br><br>
+            # Or use compose:<br>
+            docker-compose up -d
+        </div>
+    </div>
+</body>
+</html>
